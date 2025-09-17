@@ -52,9 +52,12 @@ export class DecoratorGenerator {
   async generate(): Promise<void> {
     console.log('🔄 Generating smart decorators...');
 
-    // Clean output directory if requested
-    if (this.options.clean && fs.existsSync(this.options.outputDir)) {
-      fs.rmSync(this.options.outputDir, { recursive: true });
+    // Clean only the index.ts file if requested, not the entire directory
+    if (this.options.clean) {
+      const indexPath = path.join(this.options.outputDir, 'index.ts');
+      if (fs.existsSync(indexPath)) {
+        fs.unlinkSync(indexPath);
+      }
     }
 
     // Ensure output directory exists
@@ -206,8 +209,8 @@ export type ResponseConfig = typeof RESPONSE_CONFIG;`;
   }
 
   private generateDecorator(): string {
-    return `// Smart decorator that automatically applies correct Swagger decorators
-export interface SmartResponseOptions extends Omit<ApiResponseOptions, 'type' | 'status'> {
+    return `// Inferred API Response decorator that automatically applies correct Swagger decorators
+export interface InferredAPIResponseOptions extends Omit<ApiResponseOptions, 'type' | 'status'> {
   /**
    * Override the automatically detected array setting
    */
@@ -220,10 +223,10 @@ export interface SmartResponseOptions extends Omit<ApiResponseOptions, 'type' | 
 }
 
 /**
- * Smart decorator that automatically detects and applies the correct Swagger response
+ * Inferred API Response decorator that automatically detects and applies the correct Swagger response
  * based on the controller and method name
  */
-export function SmartResponse(options: SmartResponseOptions = {}) {
+export function InferredAPIResponse(options: InferredAPIResponseOptions = {}) {
   return function (target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
     // Get the controller class name
     const controllerName = target.constructor.name.replace('Controller', '');
@@ -273,11 +276,11 @@ export function SmartResponse(options: SmartResponseOptions = {}) {
 }
 
 // Export convenience decorators
-export const SmartOkResponse = (options: SmartResponseOptions = {}) => 
-  SmartResponse({ ...options, status: 'ok' });
+export const InferredOkResponse = (options: InferredAPIResponseOptions = {}) => 
+  InferredAPIResponse({ ...options, status: 'ok' });
 
-export const SmartCreatedResponse = (options: SmartResponseOptions = {}) => 
-  SmartResponse({ ...options, status: 'created' });`;
+export const InferredCreatedResponse = (options: InferredAPIResponseOptions = {}) => 
+  InferredAPIResponse({ ...options, status: 'created' });`;
   }
 
   private detectHttpMethod(method: ts.MethodDeclaration): string | null {
