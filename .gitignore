@@ -1,0 +1,5 @@
+node_modules
+
+/examples/basic-example/node_modules
+/examples/basic-example/dist
+/examples/basic-example/build
