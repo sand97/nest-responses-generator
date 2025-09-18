@@ -2,12 +2,12 @@
 export { ServiceResponseGenerator } from './service-response-generator';
 export type { ServiceResponseGeneratorOptions } from './service-response-generator';
 
-// NestJS Plugin
-export {
-  default as nestjsResponseGeneratorPlugin,
-  createNestJSResponseGeneratorPlugin,
-} from './nestjs-plugin';
-export type { NestJSResponseGeneratorPluginOptions } from './nestjs-plugin';
+// Legacy exports (deprecated)
+// export { ... } from './nestjs-plugin';
+
+// NestJS CLI Plugin (new)
+export { default as nestjsCLIPlugin } from './nestjs-cli-index';
+export type { PluginOptions as NestResponsesGeneratorPluginOptions } from './nestjs-cli-index';
 
 // Decorators
 export { AutoResponse, AutoArrayResponse } from './decorators';
@@ -37,7 +37,7 @@ export async function generateAll(
 ) {
   // First generate the response types
   await generateResponses(generateOptions);
-  
+
   // Then generate the smart decorators
   const { DecoratorGenerator } = await import('./decorator-generator');
   const decoratorGenerator = new DecoratorGenerator(decoratorOptions);

@@ -2,10 +2,11 @@
   "name": "@nest-responses-generator/plugin",
   "version": "0.0.1",
   "description": "NestJS plugin that automatically generates Swagger response types from service return types",
-  "main": "dist/index.js",
+  "main": "plugin.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist/**/*"
+    "dist/**/*",
+    "plugin.js"
   ],
   "scripts": {
     "build": "tsc",

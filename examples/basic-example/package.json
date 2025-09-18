@@ -11,10 +11,7 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "format": "prettier --write \"src/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\"",
-    "generate:responses": "node -e \"require('@nest-responses-generator/plugin').generateResponses()\"",
-    "generate:decorators": "node -e \"const { DecoratorGenerator } = require('@nest-responses-generator/plugin'); new DecoratorGenerator().generate()\"",
-    "generate:all": "node -e \"require('@nest-responses-generator/plugin').generateAll()\""
+    "format:check": "prettier --check \"src/**/*.ts\""
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

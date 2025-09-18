@@ -13,6 +13,18 @@
           "controllerFilenameSuffix": [".controller.ts"],
           "dtoFilenameSuffix": [".dto.ts", ".entity.ts"]
         }
+      },
+      {
+        "name": "@nest-responses-generator/plugin",
+        "options": {
+          "outputDir": "src/generated",
+          "servicePattern": "**/*.service.ts",
+          "controllerPattern": "**/*.controller.ts",
+          "watch": true,
+          "clean": false,
+          "responsePrefix": "",
+          "responseSuffix": "Response"
+        }
       }
     ]
   }

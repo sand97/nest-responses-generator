@@ -13,18 +13,18 @@ export class UsersService {
     };
   }
 
-  findAll(): User[] {
+  findAll() {
     return [
       {
         id: 1,
-        firstname: 'John',
+        // firstname: 'John',
         lastname: 'Doe',
         email: 'john.doe@example.com',
         role: 'admin',
       },
       {
         id: 2,
-        firstname: 'Jane',
+        // firstname: 'Jane',
         lastname: 'Smith',
         email: 'jane.smith@example.com',
         role: 'user',
@@ -32,7 +32,7 @@ export class UsersService {
     ];
   }
 
-  findOne(id: number): User {
+  findOne(id: number) {
     return {
       id,
       firstname: 'John',
@@ -42,7 +42,7 @@ export class UsersService {
     };
   }
 
-  update(id: number, updateUserDto: UpdateUserDto): User {
+  update(id: number, updateUserDto: UpdateUserDto) {
     return {
       id,
       firstname: updateUserDto.firstname || 'John',
@@ -60,31 +60,31 @@ export class UsersService {
     page: number = 1,
     limit: number = 10
   ): {
-    data: User[];
+    // data: User[];
     meta: {
       page: number;
       limit: number;
-      total: number;
-      totalPages: number;
-      hasNext: boolean;
+      // total: number;
+      // totalPages: number;
+      // hasNext: boolean;
       hasPrev: boolean;
     };
   } {
-    const users = this.findAll();
-    const total = users.length;
-    const totalPages = Math.ceil(total / limit);
+    // const users = this.findAll();
+    // const total = users.length;
+    // const totalPages = Math.ceil(total / limit);``
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
-    const data = users.slice(startIndex, endIndex);
+    // const data = users.slice(startIndex, endIndex);
 
     return {
-      data,
+      // data,
       meta: {
         page,
         limit,
-        total,
-        totalPages,
-        hasNext: page < totalPages,
+        // total,
+        // totalPages,
+        // hasNext: page < totalPages,
         hasPrev: page > 1,
       },
     };

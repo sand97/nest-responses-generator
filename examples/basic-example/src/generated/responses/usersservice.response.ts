@@ -22,9 +22,6 @@ export class UsersServiceFindAllResponseItem {
   id: number;
 
   @ApiProperty({ example: "example name", type: 'string' })
-  firstname: string;
-
-  @ApiProperty({ example: "example name", type: 'string' })
   lastname: string;
 
   @ApiProperty({ example: "user@example.com", type: 'string' })
@@ -38,9 +35,6 @@ export class UsersServiceFindAllResponseItem {
 export const UsersServiceFindAllResponse = UsersServiceFindAllResponseItem;
 
 export class UsersServiceFindOneResponse {
-  @ApiProperty({ example: 1, type: 'number' })
-  id: number;
-
   @ApiProperty({ example: "example name", type: 'string' })
   firstname: string;
 
@@ -55,42 +49,22 @@ export class UsersServiceFindOneResponse {
 }
 
 export class UsersServiceUpdateResponse {
-  @ApiProperty({ example: 1, type: 'number' })
-  id: number;
+  @ApiProperty()
+  firstname: any;
 
-  @ApiProperty({ example: "example name", type: 'string' })
-  firstname: string;
+  @ApiProperty()
+  lastname: any;
 
-  @ApiProperty({ example: "example name", type: 'string' })
-  lastname: string;
+  @ApiProperty()
+  email: any;
 
-  @ApiProperty({ example: "user@example.com", type: 'string' })
-  email: string;
-
-  @ApiProperty({ example: "user", type: 'string' })
-  role: string;
+  @ApiProperty()
+  role: any;
 }
 
 export class UsersServiceRemoveResponse {
   @ApiProperty({ example: true, type: 'boolean' })
   deleted: boolean;
-}
-
-export class UsersServiceFindAllPaginatedResponseDataItem {
-  @ApiProperty({ example: 1, type: 'number' })
-  id: number;
-
-  @ApiProperty({ example: "example name", type: 'string' })
-  firstname: string;
-
-  @ApiProperty({ example: "example name", type: 'string' })
-  lastname: string;
-
-  @ApiProperty({ example: "user@example.com", type: 'string' })
-  email: string;
-
-  @ApiProperty({ example: "user", type: 'string' })
-  role: string;
 }
 
 export class UsersServiceFindAllPaginatedResponseMeta {
@@ -100,23 +74,11 @@ export class UsersServiceFindAllPaginatedResponseMeta {
   @ApiProperty({ example: 0, type: 'number' })
   limit: number;
 
-  @ApiProperty({ example: 0, type: 'number' })
-  total: number;
-
-  @ApiProperty({ example: 0, type: 'number' })
-  totalPages: number;
-
-  @ApiProperty({ example: true, type: 'boolean' })
-  hasNext: boolean;
-
   @ApiProperty({ example: true, type: 'boolean' })
   hasPrev: boolean;
 }
 
 export class UsersServiceFindAllPaginatedResponse {
-  @ApiProperty({ type: UsersServiceFindAllPaginatedResponseDataItem, isArray: true })
-  data: UsersServiceFindAllPaginatedResponseDataItem[];
-
   @ApiProperty({ type: UsersServiceFindAllPaginatedResponseMeta })
   meta: UsersServiceFindAllPaginatedResponseMeta;
 }
