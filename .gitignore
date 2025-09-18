@@ -1,5 +1,13 @@
 node_modules
+dist/
+build/
 
-/examples/basic-example/node_modules
-/examples/basic-example/dist
-/examples/basic-example/build
+# Generated files
+**/generated/responses/
+**/generated/index.ts
+
+# Development files
+*.log
+.env
+.env.local
+/.idea/

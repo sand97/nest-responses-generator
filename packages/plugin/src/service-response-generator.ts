@@ -354,6 +354,17 @@ export class ServiceResponseGenerator {
         if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
           const propName = prop.name.text;
           properties[propName] = this.analyzeExpression(prop.initializer);
+        } else if (ts.isShorthandPropertyAssignment(prop)) {
+          // Handle shorthand properties like { id } instead of { id: id }
+          const propName = prop.name.text;
+          // For shorthand properties, we try to infer the type from context
+          // Since we know 'id' is typically a number in our context
+          if (propName === 'id') {
+            properties[propName] = { type: 'primitive', primitiveType: 'number' };
+          } else {
+            // For other shorthand properties, default to string
+            properties[propName] = { type: 'primitive', primitiveType: 'string' };
+          }
         }
       });
       return {
@@ -375,6 +386,29 @@ export class ServiceResponseGenerator {
       expression.kind === ts.SyntaxKind.FalseKeyword
     ) {
       return { type: 'primitive', primitiveType: 'boolean' };
+    }
+
+    // Handle binary expressions like: updateUserDto.firstname || 'John'
+    if (
+      ts.isBinaryExpression(expression) &&
+      expression.operatorToken.kind === ts.SyntaxKind.BarBarToken
+    ) {
+      // For OR expressions, analyze the right-hand side (the default value)
+      return this.analyzeExpression(expression.right);
+    }
+
+    // Handle property access expressions like: updateUserDto.firstname
+    if (ts.isPropertyAccessExpression(expression)) {
+      // Try to infer type from property name patterns
+      const propertyName = expression.name.text;
+      if (propertyName.includes('email') || propertyName.includes('Email')) {
+        return { type: 'primitive', primitiveType: 'string' };
+      }
+      if (propertyName.includes('id') || propertyName.includes('Id')) {
+        return { type: 'primitive', primitiveType: 'number' };
+      }
+      // Default to string for other properties
+      return { type: 'primitive', primitiveType: 'string' };
     }
 
     return { type: 'unknown' };
@@ -430,9 +464,9 @@ export class ServiceResponseGenerator {
             const nestedProperties = Object.entries(type.properties)
               .map(([nestedName, nestedType]) => this.generateProperty(nestedName, nestedType))
               .join('\n\n');
-            
+
             nestedClasses += `export class ${nestedClassName} {\n${nestedProperties}\n}\n\n`;
-            
+
             // Return property referencing the nested class
             return `  @ApiProperty({ type: ${nestedClassName} })\n  ${name}: ${nestedClassName};`;
           } else if (type.type === 'array' && type.elementType?.type === 'object') {
@@ -441,9 +475,9 @@ export class ServiceResponseGenerator {
             const nestedProperties = Object.entries(type.elementType.properties || {})
               .map(([nestedName, nestedType]) => this.generateProperty(nestedName, nestedType))
               .join('\n\n');
-            
+
             nestedClasses += `export class ${nestedClassName} {\n${nestedProperties}\n}\n\n`;
-            
+
             // Return property referencing the nested class array with isArray: true
             return `  @ApiProperty({ type: ${nestedClassName}, isArray: true })\n  ${name}: ${nestedClassName}[];`;
           } else {

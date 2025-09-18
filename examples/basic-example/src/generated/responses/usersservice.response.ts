@@ -35,6 +35,9 @@ export class UsersServiceFindAllResponseItem {
 export const UsersServiceFindAllResponse = UsersServiceFindAllResponseItem;
 
 export class UsersServiceFindOneResponse {
+  @ApiProperty({ example: 1, type: 'number' })
+  id: number;
+
   @ApiProperty({ example: "example name", type: 'string' })
   firstname: string;
 
@@ -49,17 +52,20 @@ export class UsersServiceFindOneResponse {
 }
 
 export class UsersServiceUpdateResponse {
-  @ApiProperty()
-  firstname: any;
+  @ApiProperty({ example: 1, type: 'number' })
+  id: number;
 
-  @ApiProperty()
-  lastname: any;
+  @ApiProperty({ example: "example name", type: 'string' })
+  firstname: string;
 
-  @ApiProperty()
-  email: any;
+  @ApiProperty({ example: "example name", type: 'string' })
+  lastname: string;
 
-  @ApiProperty()
-  role: any;
+  @ApiProperty({ example: "user@example.com", type: 'string' })
+  email: string;
+
+  @ApiProperty({ example: "user", type: 'string' })
+  role: string;
 }
 
 export class UsersServiceRemoveResponse {
