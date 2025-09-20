@@ -29,6 +29,25 @@ pnpm add @nest-responses-generator/plugin
 yarn add @nest-responses-generator/plugin
 ```
 
+### Build Steps
+
+After installation, you need to build the plugin and ensure it's properly linked in your workspace:
+
+```bash
+# 1. Build the plugin package
+cd packages/plugin
+pnpm run build
+
+# 2. Install dependencies in your example app
+cd examples/basic-example
+pnpm install
+
+# 3. Start the development server
+pnpm run start:dev
+```
+
+**Note**: If you're using this plugin in a monorepo setup, make sure to run `pnpm install` from the workspace root to properly link all packages.
+
 ### Configuration
 
 Add the plugin to your `nest-cli.json`:
@@ -576,6 +595,51 @@ export class UsersController {
 - ⚡ **Development speed** - focus on business logic, not documentation
 - 🛡️ **Type safety** - TypeScript ensures consistency
 - 📚 **Rich documentation** - automatic examples and proper OpenAPI specs
+
+## 🔧 Troubleshooting
+
+### Plugin Not Installed Error
+
+If you encounter the error `"@nest-responses-generator/plugin" plugin is not installed`, follow these steps:
+
+1. **Build the plugin package**:
+   ```bash
+   cd packages/plugin
+   pnpm run build
+   ```
+
+2. **Reinstall dependencies**:
+   ```bash
+   cd examples/basic-example
+   pnpm install
+   ```
+
+3. **Verify plugin is properly linked**:
+   ```bash
+   ls node_modules/@nest-responses-generator/plugin/
+   ```
+   You should see the `plugin.js` file and `dist/` directory.
+
+4. **Check nest-cli.json configuration**:
+   Ensure the plugin is properly configured in your `nest-cli.json`:
+   ```json
+   {
+     "compilerOptions": {
+       "plugins": [
+         {
+           "name": "@nest-responses-generator/plugin",
+           "options": { ... }
+         }
+       ]
+     }
+   }
+   ```
+
+### Common Issues
+
+- **TypeScript compilation errors**: Make sure your service methods have explicit return types
+- **Generated files not updating**: Check that the plugin has write permissions to the output directory
+- **Import errors**: Ensure the generated files are not manually edited (they should be auto-generated only)
 
 ## 🤝 Contributing
 
