@@ -151,7 +151,7 @@ export class DecoratorGenerator {
   }
 
   private generateIndexFile(analyses: ControllerAnalysis[]): void {
-    const outputPath = path.join(this.options.outputDir, 'index.ts');
+    const outputPath = path.join(this.options.outputDir, 'responses', 'index.ts');
 
     const imports = this.generateImports(analyses);
     const responseMapping = this.generateResponseMapping(analyses);
@@ -169,11 +169,11 @@ export class DecoratorGenerator {
       "import { ApiOkResponse, ApiCreatedResponse, ApiResponseOptions } from '@nestjs/swagger';",
     ];
 
-    // Import all response types
+    // Import all response types (same directory now)
     const responseImports = analyses.map(analysis => {
       const responseName = `${analysis.serviceName.replace('Service', '')}ServiceResponse`;
-      // Use relative path from src/generated to src/generated/responses
-      const relativePath = `./responses/${analysis.serviceName.toLowerCase()}.response`;
+      // Use relative path within the same responses directory
+      const relativePath = `./${analysis.serviceName.toLowerCase()}.response`;
       return `import { ${responseName} } from '${relativePath}';`;
     });
 

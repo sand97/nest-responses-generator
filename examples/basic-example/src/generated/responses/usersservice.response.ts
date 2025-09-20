@@ -74,17 +74,20 @@ export class UsersServiceRemoveResponse {
 }
 
 export class UsersServiceFindAllPaginatedResponseMeta {
-  @ApiProperty({ example: 0, type: 'number' })
-  page: number;
+  @ApiProperty({ example: "example value", type: 'string' })
+  page: string;
 
-  @ApiProperty({ example: 0, type: 'number' })
-  limit: number;
+  @ApiProperty({ example: "example value", type: 'string' })
+  limit: string;
 
-  @ApiProperty({ example: true, type: 'boolean' })
-  hasPrev: boolean;
+  @ApiProperty({ example: "example value", type: 'string' })
+  total: string;
 }
 
 export class UsersServiceFindAllPaginatedResponse {
+  @ApiProperty({ example: "example value", type: 'string' })
+  data: string;
+
   @ApiProperty({ type: UsersServiceFindAllPaginatedResponseMeta })
   meta: UsersServiceFindAllPaginatedResponseMeta;
 }

@@ -17,7 +17,7 @@ import {
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto } from '../common/dto/user.dto';
-import { InferredAPIResponse } from '../generated';
+import { InferredAPIResponse } from '../generated/responses';
 
 @ApiTags('users')
 @Controller('users')

@@ -59,33 +59,23 @@ export class UsersService {
   findAllPaginated(
     page: number = 1,
     limit: number = 10
-  ): {
-    // data: User[];
-    meta: {
-      page: number;
-      limit: number;
-      // total: number;
-      // totalPages: number;
-      // hasNext: boolean;
-      hasPrev: boolean;
-    };
-  } {
-    // const users = this.findAll();
-    // const total = users.length;
-    // const totalPages = Math.ceil(total / limit);``
+  ) {
+    const users = this.findAll();
+    const total = users.length;
+    const totalPages = Math.ceil(total / limit);``
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
-    // const data = users.slice(startIndex, endIndex);
+    const data = users.slice(startIndex, endIndex);
 
     return {
-      // data,
+      data,
       meta: {
         page,
         limit,
-        // total,
+        total,
         // totalPages,
         // hasNext: page < totalPages,
-        hasPrev: page > 1,
+        // hasPrev: page > 1,
       },
     };
   }
