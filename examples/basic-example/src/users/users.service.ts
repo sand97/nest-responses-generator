@@ -73,9 +73,9 @@ export class UsersService {
         page,
         limit,
         total,
-        // totalPages,
-        // hasNext: page < totalPages,
-        // hasPrev: page > 1,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
       },
     };
   }

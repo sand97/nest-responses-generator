@@ -82,6 +82,15 @@ export class UsersServiceFindAllPaginatedResponseMeta {
 
   @ApiProperty({ example: "example value", type: 'string' })
   total: string;
+
+  @ApiProperty({ example: "example value", type: 'string' })
+  totalPages: string;
+
+  @ApiProperty({ example: true, type: 'boolean' })
+  hasNext: boolean;
+
+  @ApiProperty({ example: true, type: 'boolean' })
+  hasPrev: boolean;
 }
 
 export class UsersServiceFindAllPaginatedResponse {

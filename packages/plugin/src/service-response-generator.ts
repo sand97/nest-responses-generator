@@ -388,13 +388,28 @@ export class ServiceResponseGenerator {
       return { type: 'primitive', primitiveType: 'boolean' };
     }
 
-    // Handle binary expressions like: updateUserDto.firstname || 'John'
-    if (
-      ts.isBinaryExpression(expression) &&
-      expression.operatorToken.kind === ts.SyntaxKind.BarBarToken
-    ) {
-      // For OR expressions, analyze the right-hand side (the default value)
-      return this.analyzeExpression(expression.right);
+    // Handle binary expressions
+    if (ts.isBinaryExpression(expression)) {
+      // For OR expressions like: updateUserDto.firstname || 'John'
+      if (expression.operatorToken.kind === ts.SyntaxKind.BarBarToken) {
+        // For OR expressions, analyze the right-hand side (the default value)
+        return this.analyzeExpression(expression.right);
+      }
+
+      // For comparison expressions like: page < totalPages, page > 1
+      if (
+        expression.operatorToken.kind === ts.SyntaxKind.LessThanToken ||
+        expression.operatorToken.kind === ts.SyntaxKind.GreaterThanToken ||
+        expression.operatorToken.kind === ts.SyntaxKind.LessThanEqualsToken ||
+        expression.operatorToken.kind === ts.SyntaxKind.GreaterThanEqualsToken ||
+        expression.operatorToken.kind === ts.SyntaxKind.EqualsEqualsToken ||
+        expression.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken ||
+        expression.operatorToken.kind === ts.SyntaxKind.ExclamationEqualsToken ||
+        expression.operatorToken.kind === ts.SyntaxKind.ExclamationEqualsEqualsToken
+      ) {
+        // Comparison expressions return boolean
+        return { type: 'primitive', primitiveType: 'boolean' };
+      }
     }
 
     // Handle property access expressions like: updateUserDto.firstname
