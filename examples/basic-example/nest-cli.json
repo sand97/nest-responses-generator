@@ -20,10 +20,7 @@
           "outputDir": "src/generated",
           "servicePattern": "**/*.service.ts",
           "controllerPattern": "**/*.controller.ts",
-          "watch": false,
-          "clean": false,
-          "responsePrefix": "",
-          "responseSuffix": "Response"
+          "clean": false
         }
       }
     ]

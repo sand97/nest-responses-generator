@@ -18,7 +18,15 @@ npm install @nest-responses-generator/plugin
 {
   "compilerOptions": {
     "plugins": [
-      "@nest-responses-generator/plugin"
+      {
+        "name": "@nest-responses-generator/plugin",
+        "options": {
+          "outputDir": "src/generated",
+          "servicePattern": "**/*.service.ts",
+          "controllerPattern": "**/*.controller.ts",
+          "clean": false
+        }
+      }
     ]
   }
 }

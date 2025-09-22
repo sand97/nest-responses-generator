@@ -15,10 +15,6 @@ export interface PluginOptions {
   outputDir?: string;
   /** Whether to clean output directory before generation (default: false) */
   clean?: boolean;
-  /** Custom response class prefix (default: '') */
-  responsePrefix?: string;
-  /** Custom response class suffix (default: 'Response') */
-  responseSuffix?: string;
   /** Glob pattern to match service files (default: '**\/*.service.ts') */
   servicePattern?: string;
   /** Glob pattern to match controller files (default: '**\/*.controller.ts') */
@@ -158,8 +154,6 @@ function runPlugin(program: ts.Program, options: PluginOptions = {}) {
   const pluginOptions = {
     outputDir: 'src/generated',
     clean: false,
-    responsePrefix: '',
-    responseSuffix: 'Response',
     servicePattern: '**/*.service.ts',
     controllerPattern: '**/*.controller.ts',
     ...options,

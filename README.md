@@ -75,10 +75,7 @@ Add the plugin to your `nest-cli.json`:
           "outputDir": "src/generated",
           "servicePattern": "**/*.service.ts",
           "controllerPattern": "**/*.controller.ts",
-          "watch": true,
-          "clean": false,
-          "responsePrefix": "",
-          "responseSuffix": "Response"
+          "clean": false
         }
       }
     ]
@@ -93,10 +90,7 @@ Add the plugin to your `nest-cli.json`:
 | `outputDir` | `string` | `'src/generated'` | Output directory for generated files |
 | `servicePattern` | `string` | `'**/*.service.ts'` | Glob pattern to match service files |
 | `controllerPattern` | `string` | `'**/*.controller.ts'` | Glob pattern to match controller files |
-| `watch` | `boolean` | `true` | Whether to watch files for changes in development |
 | `clean` | `boolean` | `false` | Whether to clean output directory before generation |
-| `responsePrefix` | `string` | `''` | Custom prefix for generated response classes |
-| `responseSuffix` | `string` | `'Response'` | Custom suffix for generated response classes |
 
 ## 📖 Usage
 
