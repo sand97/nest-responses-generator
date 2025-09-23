@@ -99,7 +99,38 @@ jobs:
             echo "Manual trigger for package: ${{ github.event.inputs.package_name }}"
             echo "packages=[\"${{ github.event.inputs.package_name }}\"]" >> $GITHUB_OUTPUT
             echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "DEBUG - Manual trigger - packages: [\"${{ github.event.inputs.package_name }}\"]"
+            echo "DEBUG - Manual trigger - has_changes: true"
             exit 0
+          fi
+
+          # Force publish all packages if requested
+          if [ "${{ github.event.inputs.force_publish }}" == "true" ] && [ "${{ github.event.inputs.package_name }}" == "" ]; then
+            echo "Force publish triggered - detecting all packages..."
+            all_packages="[]"
+            packages_with_changes=()
+
+            for package_dir in packages/*/; do
+              if [ -d "$package_dir" ]; then
+                if [ -f "${package_dir}package.json" ]; then
+                  npm_name=$(node -p "require('./${package_dir}package.json').name" 2>/dev/null || echo "")
+                  if [ "$npm_name" != "" ]; then
+                    echo "Found package for force publish: $npm_name"
+                    packages_with_changes+=("\"$npm_name\"")
+                  fi
+                fi
+              fi
+            done
+
+            if [ ${#packages_with_changes[@]} -gt 0 ]; then
+              IFS=','
+              all_packages="[${packages_with_changes[*]}]"
+              echo "packages=$all_packages" >> $GITHUB_OUTPUT
+              echo "has_changes=true" >> $GITHUB_OUTPUT
+              echo "DEBUG - Force publish - packages: $all_packages"
+              echo "DEBUG - Force publish - has_changes: true"
+              exit 0
+            fi
           fi
 
           # Auto-detect changes
@@ -154,12 +185,21 @@ jobs:
           echo "Final packages to publish: $changed_packages"
           echo "Has changes: $has_changes"
 
+          # Ensure we always output valid JSON
+          if [ "$changed_packages" = "" ]; then
+            changed_packages="[]"
+          fi
+
           echo "packages=$changed_packages" >> $GITHUB_OUTPUT
           echo "has_changes=$has_changes" >> $GITHUB_OUTPUT
 
+          # Debug output
+          echo "DEBUG - packages output: $changed_packages"
+          echo "DEBUG - has_changes output: $has_changes"
+
   publish:
     needs: detect-changes
-    if: needs.detect-changes.outputs.has_changes == 'true' || github.event.inputs.force_publish == 'true'
+    if: (needs.detect-changes.outputs.has_changes == 'true' && needs.detect-changes.outputs.packages != '[]') || github.event.inputs.force_publish == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -319,14 +359,20 @@ jobs:
 
   notify:
     needs: [detect-changes, publish]
-    if: always() && needs.detect-changes.outputs.has_changes == 'true'
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Notify completion
         run: |
-          if [ "${{ needs.publish.result }}" == "success" ]; then
-            echo "✅ Successfully published packages: ${{ needs.detect-changes.outputs.packages }}"
+          if [ "${{ needs.detect-changes.outputs.has_changes }}" == "true" ]; then
+            if [ "${{ needs.publish.result }}" == "success" ]; then
+              echo "✅ Successfully published packages: ${{ needs.detect-changes.outputs.packages }}"
+            elif [ "${{ needs.publish.result }}" == "skipped" ]; then
+              echo "ℹ️ No packages to publish (empty package list)"
+            else
+              echo "❌ Failed to publish some packages"
+              exit 1
+            fi
           else
-            echo "❌ Failed to publish some packages"
-            exit 1
+            echo "ℹ️ No changes detected - no packages published"
           fi

@@ -1,6 +1,6 @@
 {
   "name": "nest-responses-generator-plugin",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "NestJS plugin that automatically generates Swagger response JSON examples from service's return types",
   "main": "plugin.js",
   "repository": {
