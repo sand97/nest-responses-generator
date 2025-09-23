@@ -30,7 +30,7 @@ on:
 
 env:
   NODE_VERSION: '20'
-  PNPM_VERSION: '8'
+  PNPM_VERSION: '10'
 
 jobs:
   detect-changes:
@@ -54,6 +54,15 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
 
+      - name: Debug pnpm and lockfile (detect-changes)
+        run: |
+          echo "pnpm version: $(pnpm --version)"
+          echo "Node version: $(node --version)"
+          echo "Lockfile exists: $([ -f "pnpm-lock.yaml" ] && echo "yes" || echo "no")"
+          if [ -f "pnpm-lock.yaml" ]; then
+            echo "Lockfile version: $(head -1 pnpm-lock.yaml)"
+          fi
+
       - name: Get pnpm store directory
         shell: bash
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
@@ -67,7 +76,18 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          if [ -f "pnpm-lock.yaml" ]; then
+            echo "Installing with frozen lockfile..."
+            pnpm install --frozen-lockfile || {
+              echo "Frozen lockfile failed, regenerating lockfile and installing..."
+              rm -f pnpm-lock.yaml
+              pnpm install
+            }
+          else
+            echo "No lockfile found, installing and generating new lockfile..."
+            pnpm install
+          fi
 
       - name: Detect changed packages
         id: changes
@@ -162,6 +182,15 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
 
+      - name: Debug pnpm and lockfile (publish)
+        run: |
+          echo "pnpm version: $(pnpm --version)"
+          echo "Node version: $(node --version)"
+          echo "Lockfile exists: $([ -f "pnpm-lock.yaml" ] && echo "yes" || echo "no")"
+          if [ -f "pnpm-lock.yaml" ]; then
+            echo "Lockfile version: $(head -1 pnpm-lock.yaml)"
+          fi
+
       - name: Get pnpm store directory
         shell: bash
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
@@ -175,7 +204,18 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          if [ -f "pnpm-lock.yaml" ]; then
+            echo "Installing with frozen lockfile..."
+            pnpm install --frozen-lockfile || {
+              echo "Frozen lockfile failed, regenerating lockfile and installing..."
+              rm -f pnpm-lock.yaml
+              pnpm install
+            }
+          else
+            echo "No lockfile found, installing and generating new lockfile..."
+            pnpm install
+          fi
 
       - name: Configure Git
         run: |

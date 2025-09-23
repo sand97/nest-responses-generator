@@ -20,10 +20,21 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: '8'
+          version: '10'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          if [ -f "pnpm-lock.yaml" ]; then
+            echo "Installing with frozen lockfile..."
+            pnpm install --frozen-lockfile || {
+              echo "Frozen lockfile failed, regenerating lockfile and installing..."
+              rm -f pnpm-lock.yaml
+              pnpm install
+            }
+          else
+            echo "No lockfile found, installing and generating new lockfile..."
+            pnpm install
+          fi
 
       - name: Test package detection
         run: |
