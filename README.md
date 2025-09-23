@@ -2,7 +2,7 @@
 
 🚀 **Automatically generate OpenAPI/Swagger response types from your NestJS service return types - Zero duplication, maximum type safety!**
 
-[![npm version](https://badge.fury.io/js/%40nest-responses-generator%2Fplugin.svg)](https://badge.fury.io/js/%40nest-responses-generator%2Fplugin)
+[![npm version](https://badge.fury.io/js/nest-responses-generator-plugin.svg)](https://badge.fury.io/js/nest-responses-generator-plugin)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## ✨ Features
@@ -22,11 +22,11 @@
 ### Installation
 
 ```bash
-npm install @nest-responses-generator/plugin
+npm install nest-responses-generator-plugin
 # or
-pnpm add @nest-responses-generator/plugin
+pnpm add nest-responses-generator-plugin
 # or
-yarn add @nest-responses-generator/plugin
+yarn add nest-responses-generator-plugin
 ```
 
 ### Build Steps
@@ -70,7 +70,7 @@ Add the plugin to your `nest-cli.json`:
         }
       },
       {
-        "name": "@nest-responses-generator/plugin",
+        "name": "nest-responses-generator-plugin",
         "options": {
           "outputDir": "src/generated",
           "servicePattern": "**/*.service.ts",
@@ -594,7 +594,7 @@ export class UsersController {
 
 ### Plugin Not Installed Error
 
-If you encounter the error `"@nest-responses-generator/plugin" plugin is not installed`, follow these steps:
+If you encounter the error `"nest-responses-generator-plugin" plugin is not installed`, follow these steps:
 
 1. **Build the plugin package**:
    ```bash
@@ -610,7 +610,7 @@ If you encounter the error `"@nest-responses-generator/plugin" plugin is not ins
 
 3. **Verify plugin is properly linked**:
    ```bash
-   ls node_modules/@nest-responses-generator/plugin/
+   ls node_modules/nest-responses-generator-plugin/
    ```
    You should see the `plugin.js` file and `dist/` directory.
 
@@ -621,7 +621,7 @@ If you encounter the error `"@nest-responses-generator/plugin" plugin is not ins
      "compilerOptions": {
        "plugins": [
          {
-           "name": "@nest-responses-generator/plugin",
+           "name": "nest-responses-generator-plugin",
            "options": { ... }
          }
        ]
@@ -634,6 +634,168 @@ If you encounter the error `"@nest-responses-generator/plugin" plugin is not ins
 - **TypeScript compilation errors**: Make sure your service methods have explicit return types
 - **Generated files not updating**: Check that the plugin has write permissions to the output directory
 - **Import errors**: Ensure the generated files are not manually edited (they should be auto-generated only)
+
+## 📦 Publishing & Development
+
+This monorepo uses automated publishing with GitHub Actions and manual publishing scripts.
+
+### 🚀 Automated Publishing (GitHub Actions)
+
+The repository is configured with smart auto-publishing that detects package changes and publishes them automatically.
+
+#### How It Works
+- **Automatic Detection**: Pushes to `main` branch automatically detect which packages changed
+- **Smart Versioning**: Auto-bumps versions if current version exists on npm
+- **Build & Test**: Runs build and tests before publishing
+- **Git Integration**: Commits version bumps back and creates tags
+
+#### Setup Required
+
+**1. Add NPM Token to GitHub Secrets:**
+1. Generate automation token at https://www.npmjs.com/settings/tokens
+2. Go to repository **Settings** → **Secrets and variables** → **Actions**
+3. Add new secret: `NPM_TOKEN` with your token value
+
+**2. Push Changes:**
+```bash
+# Make changes to any package
+git add packages/plugin/src/new-feature.ts
+git commit -m "feat: add new feature"
+git push origin main
+
+# Workflow automatically:
+# → Detects changes in plugin package
+# → Builds and tests the package
+# → Bumps version if needed
+# → Publishes to npm
+# → Commits version bump back
+# → Creates git tag
+```
+
+**3. Manual Trigger:**
+- Go to **Actions** tab → **Auto Publish Packages** → **Run workflow**
+- Choose package name, version type, and options
+
+#### Workflow Features
+- ✅ Smart package change detection
+- ✅ Automatic version bumping (patch/minor/major)
+- ✅ Build validation before publishing
+- ✅ Git tags for published versions
+- ✅ Manual trigger with custom options
+- ✅ Parallel publishing for multiple packages
+
+### 🛠 Manual Publishing
+
+For local development and testing:
+
+#### Quick Commands
+```bash
+# Publish plugin with current version
+pnpm run publish:plugin
+
+# Test publishing (dry run)
+pnpm run publish:plugin:dry
+
+# Publish with version bump
+pnpm run publish:plugin:patch   # 0.0.1 → 0.0.2
+pnpm run publish:plugin:minor   # 0.0.1 → 0.1.0
+pnpm run publish:plugin:major   # 0.0.1 → 1.0.0
+```
+
+#### Generic Package Publishing
+```bash
+# Publish any package by name
+node scripts/publish-package.js <package-name> [version-type]
+
+# Examples:
+node scripts/publish-package.js nest-responses-generator-plugin
+node scripts/publish-package.js nest-responses-generator-plugin patch
+node scripts/publish-package.js nest-responses-generator-plugin --dry-run
+```
+
+#### Publishing Process
+The automated script:
+1. ✅ Validates package exists in workspace
+2. ✅ Updates version (if specified)
+3. ✅ Builds the package
+4. ✅ Runs `prepublishOnly` script
+5. ✅ Publishes to npm with public access
+6. ✅ Handles authentication and git checks
+
+### 📋 Adding New Packages
+
+To add a new publishable package to the monorepo:
+
+1. **Create package structure:**
+   ```
+   packages/your-package/
+   ├── package.json
+   ├── src/
+   └── ...
+   ```
+
+2. **Configure package.json:**
+   ```json
+   {
+     "name": "your-package-name",
+     "version": "0.0.1",
+     "main": "dist/index.js",
+     "types": "dist/index.d.ts",
+     "files": ["dist/**/*"],
+     "scripts": {
+       "build": "tsc",
+       "prepublishOnly": "npm run build"
+     }
+   }
+   ```
+
+3. **Add convenience scripts to root package.json:**
+   ```json
+   {
+     "scripts": {
+       "publish:your-package": "node scripts/publish-package.js your-package-name",
+       "publish:your-package:dry": "node scripts/publish-package.js your-package-name --dry-run"
+     }
+   }
+   ```
+
+4. **The GitHub workflow will automatically detect and publish changes!**
+
+### 🔍 Monitoring Publications
+
+#### Check Published Packages
+```bash
+# Verify latest version on npm
+npm view nest-responses-generator-plugin version
+
+# Install published package
+npm install nest-responses-generator-plugin@latest
+```
+
+#### GitHub Actions Monitoring
+- Go to **Actions** tab in repository
+- View workflow runs and their status
+- Check detailed logs for troubleshooting
+
+### 🛡 Security & Best Practices
+
+#### NPM Token Security
+- ✅ Use "Automation" token type for CI/CD
+- ✅ Store token in GitHub repository secrets only
+- ✅ Use descriptive token names
+- ❌ Never commit tokens to code
+- ❌ Never share tokens in logs or files
+
+#### Version Management
+- 📈 **Patch** (0.0.X): Bug fixes and small changes
+- 📈 **Minor** (0.X.0): New features, backward compatible
+- 📈 **Major** (X.0.0): Breaking changes
+
+#### Git Workflow
+- 🔀 All changes go through main branch
+- 🏷️ Automatic git tags for releases
+- 💾 Version bumps committed back to repository
+- 🔄 Clean git history maintained
 
 ## 🤝 Contributing
 

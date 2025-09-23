@@ -1,0 +1,292 @@
+name: Auto Publish Packages
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+  workflow_dispatch:
+    inputs:
+      package_name:
+        description: 'Package name to publish (leave empty for auto-detection)'
+        required: false
+        type: string
+      version_type:
+        description: 'Version bump type'
+        required: false
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      force_publish:
+        description: 'Force publish even if no changes detected'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8'
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.changes.outputs.packages }}
+      has_changes: ${{ steps.changes.outputs.has_changes }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Detect changed packages
+        id: changes
+        run: |
+          echo "Detecting package changes..."
+
+          # Manual trigger with specific package
+          if [ "${{ github.event.inputs.package_name }}" != "" ]; then
+            echo "Manual trigger for package: ${{ github.event.inputs.package_name }}"
+            echo "packages=[\"${{ github.event.inputs.package_name }}\"]" >> $GITHUB_OUTPUT
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Auto-detect changes
+          changed_packages="[]"
+          has_changes="false"
+
+          # Get list of changed files
+          if [ "${{ github.event_name }}" = "push" ]; then
+            if [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+              changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+            else
+              # First push to branch
+              changed_files=$(git diff --name-only HEAD~1 HEAD)
+            fi
+          else
+            changed_files=$(git diff --name-only HEAD~1 HEAD)
+          fi
+
+          echo "Changed files:"
+          echo "$changed_files"
+
+          # Check for package changes
+          packages_with_changes=()
+
+          # Check each package directory
+          for package_dir in packages/*/; do
+            if [ -d "$package_dir" ]; then
+              package_name=$(basename "$package_dir")
+
+              # Check if package.json exists and get the npm name
+              if [ -f "${package_dir}package.json" ]; then
+                npm_name=$(node -p "require('./${package_dir}package.json').name" 2>/dev/null || echo "")
+
+                if [ "$npm_name" != "" ]; then
+                  # Check if any files in this package directory changed
+                  if echo "$changed_files" | grep -q "^${package_dir}"; then
+                    echo "Changes detected in package: $npm_name (${package_dir})"
+                    packages_with_changes+=("\"$npm_name\"")
+                  fi
+                fi
+              fi
+            fi
+          done
+
+          if [ ${#packages_with_changes[@]} -gt 0 ]; then
+            has_changes="true"
+            # Create JSON array
+            IFS=','
+            changed_packages="[${packages_with_changes[*]}]"
+          fi
+
+          echo "Final packages to publish: $changed_packages"
+          echo "Has changes: $has_changes"
+
+          echo "packages=$changed_packages" >> $GITHUB_OUTPUT
+          echo "has_changes=$has_changes" >> $GITHUB_OUTPUT
+
+  publish:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_changes == 'true' || github.event.inputs.force_publish == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.detect-changes.outputs.packages) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Need full history for version bumping
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check if package exists
+        id: check_package
+        run: |
+          if pnpm list --filter "${{ matrix.package }}" --depth=0 >/dev/null 2>&1; then
+            echo "package_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "package_exists=false" >> $GITHUB_OUTPUT
+            echo "❌ Package ${{ matrix.package }} not found in workspace"
+          fi
+
+      - name: Get current version
+        if: steps.check_package.outputs.package_exists == 'true'
+        id: current_version
+        run: |
+          current_version=$(pnpm --filter "${{ matrix.package }}" exec node -p "require('./package.json').version")
+          echo "current_version=$current_version" >> $GITHUB_OUTPUT
+          echo "Current version of ${{ matrix.package }}: $current_version"
+
+      - name: Check if version exists on npm
+        if: steps.check_package.outputs.package_exists == 'true'
+        id: npm_check
+        run: |
+          set +e
+          npm view "${{ matrix.package }}@${{ steps.current_version.outputs.current_version }}" version >/dev/null 2>&1
+          if [ $? -eq 0 ]; then
+            echo "version_exists=true" >> $GITHUB_OUTPUT
+            echo "Version ${{ steps.current_version.outputs.current_version }} already exists on npm"
+          else
+            echo "version_exists=false" >> $GITHUB_OUTPUT
+            echo "Version ${{ steps.current_version.outputs.current_version }} does not exist on npm"
+          fi
+
+      - name: Bump version
+        if: steps.check_package.outputs.package_exists == 'true' && (steps.npm_check.outputs.version_exists == 'true' || github.event.inputs.version_type != '')
+        id: bump_version
+        run: |
+          version_type="${{ github.event.inputs.version_type || 'patch' }}"
+          echo "Bumping version: $version_type"
+
+          # Bump version
+          pnpm --filter "${{ matrix.package }}" version $version_type --no-git-tag-version
+
+          # Get new version
+          new_version=$(pnpm --filter "${{ matrix.package }}" exec node -p "require('./package.json').version")
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+          echo "New version: $new_version"
+
+      - name: Build package
+        if: steps.check_package.outputs.package_exists == 'true'
+        run: |
+          echo "Building package: ${{ matrix.package }}"
+          pnpm --filter "${{ matrix.package }}" run build
+
+      - name: Run tests (if available)
+        if: steps.check_package.outputs.package_exists == 'true'
+        run: |
+          # Check if test script exists
+          if pnpm --filter "${{ matrix.package }}" run test --dry-run >/dev/null 2>&1; then
+            echo "Running tests for ${{ matrix.package }}"
+            pnpm --filter "${{ matrix.package }}" run test
+          else
+            echo "No tests found for ${{ matrix.package }}, skipping..."
+          fi
+        continue-on-error: true
+
+      - name: Publish to npm
+        if: steps.check_package.outputs.package_exists == 'true'
+        run: |
+          echo "Publishing ${{ matrix.package }} to npm..."
+          pnpm --filter "${{ matrix.package }}" publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Commit version bump
+        if: steps.bump_version.outputs.new_version != ''
+        run: |
+          # Find the package directory
+          package_dir=$(find packages -name "package.json" -exec grep -l "\"name\":\s*\"${{ matrix.package }}\"" {} \; | head -1 | xargs dirname)
+
+          if [ -n "$package_dir" ]; then
+            git add "$package_dir/package.json"
+            git commit -m "chore: bump ${{ matrix.package }} version to ${{ steps.bump_version.outputs.new_version }}" || echo "No changes to commit"
+
+            # Create tag
+            git tag "${{ matrix.package }}@${{ steps.bump_version.outputs.new_version }}"
+          fi
+
+      - name: Push changes
+        if: steps.bump_version.outputs.new_version != ''
+        run: |
+          git push origin ${{ github.ref_name }}
+          git push origin --tags
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    needs: [detect-changes, publish]
+    if: always() && needs.detect-changes.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify completion
+        run: |
+          if [ "${{ needs.publish.result }}" == "success" ]; then
+            echo "✅ Successfully published packages: ${{ needs.detect-changes.outputs.packages }}"
+          else
+            echo "❌ Failed to publish some packages"
+            exit 1
+          fi

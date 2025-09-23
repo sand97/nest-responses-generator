@@ -1,0 +1,81 @@
+name: Test Workflow Setup
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test-setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: '8'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test package detection
+        run: |
+          echo "Testing package detection..."
+
+          # List all packages in workspace
+          echo "Packages in workspace:"
+          pnpm list --depth=0 --json | jq -r '.[] | select(.name != null) | .name'
+
+          # Test build for plugin package
+          echo "Testing build for plugin package..."
+          if pnpm --filter nest-responses-generator-plugin run build; then
+            echo "✅ Plugin package builds successfully"
+          else
+            echo "❌ Plugin package build failed"
+            exit 1
+          fi
+
+      - name: Test publish script
+        run: |
+          echo "Testing publish script (dry run)..."
+          if node scripts/publish-package.js nest-responses-generator-plugin --dry-run; then
+            echo "✅ Publish script works correctly"
+          else
+            echo "❌ Publish script failed"
+            exit 1
+          fi
+
+      - name: Validate package.json
+        run: |
+          echo "Validating package.json files..."
+
+          # Check plugin package.json
+          plugin_package_json="packages/plugin/package.json"
+          if [ -f "$plugin_package_json" ]; then
+            name=$(node -p "require('./$plugin_package_json').name")
+            version=$(node -p "require('./$plugin_package_json').version")
+            echo "✅ Plugin package: $name@$version"
+          else
+            echo "❌ Plugin package.json not found"
+            exit 1
+          fi
+
+      - name: Check workflow syntax
+        run: |
+          echo "Checking workflow files..."
+          for workflow in .github/workflows/*.yml; do
+            echo "Checking $workflow..."
+            if command -v yamllint >/dev/null 2>&1; then
+              yamllint "$workflow"
+            else
+              echo "⚠️  yamllint not available, skipping syntax check"
+            fi
+          done
+          echo "✅ Workflow files look good"

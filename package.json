@@ -1,7 +1,10 @@
 {
   "name": "@nest-responses-generator/root",
   "version": "0.0.1",
-  "description": "Generate Open API response specifications based on inferred types of functions in controllers",
+  "description": "NestJS plugin that automatically generates Swagger response JSON examples from service's return types",
+  "repository": {
+    "url": "https://github.com/sand97/nest-responses-generator"
+  },
   "private": true,
   "scripts": {
     "build": "pnpm -r run build",
@@ -11,7 +14,15 @@
     "lint:fix": "pnpm -r run lint:fix",
     "format": "pnpm -r run format",
     "format:check": "pnpm -r run format:check",
-    "example:basic": "pnpm --filter basic-example run start:dev"
+    "example:basic": "pnpm --filter basic-example run start:dev",
+    "publish:plugin": "node scripts/publish-package.js nest-responses-generator-plugin",
+    "publish:plugin:dry": "node scripts/publish-package.js nest-responses-generator-plugin --dry-run",
+    "publish:plugin:patch": "node scripts/publish-package.js nest-responses-generator-plugin patch",
+    "publish:plugin:minor": "node scripts/publish-package.js nest-responses-generator-plugin minor",
+    "publish:plugin:major": "node scripts/publish-package.js nest-responses-generator-plugin major",
+    "publish:package": "node scripts/publish-package.js",
+    "version:plugin": "pnpm --filter nest-responses-generator-plugin version",
+    "changeset": "echo 'For future: consider using changesets for version management' && echo 'npm install @changesets/cli && npx changeset init'"
   },
   "devDependencies": {
     "typescript": "^5.3.0",
